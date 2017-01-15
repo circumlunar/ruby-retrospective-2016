@@ -1,14 +1,15 @@
 class Hash
-  def fetch_deep(path)
-    keys = path.split('.', 2)
-    value = try_get_value(keys.first)
-    return value unless keys[1]
-    return value.fetch_deep(keys[1]) if [Hash, Array].member? value.class
+  def fetch_deep(key_path)
+    key, nested_key_path = key_path.split('.', 2)
+    value = try_get_value(key)
+
+    return value unless nested_key_path
+    return value.fetch_deep(nested_key_path) if value
   end
 
   def reshape(shape)
     shape.map do |key, value|
-      [key, (value.is_a? Hash) ? reshape(value) : fetch_deep(value)]
+      (value.is_a? Hash) ? [key, reshape(value)] : [key, fetch_deep(value)]
     end.to_h
   end
 
@@ -19,11 +20,12 @@ class Hash
 end
 
 class Array
-  def fetch_deep(path)
-    keys = path.split('.', 2)
-    value = self[keys[0].to_i]
-    return value unless keys[1]
-    return value.fetch_deep(keys[1]) if [Hash, Array].member? value.class
+  def fetch_deep(key_path)
+    key, nested_key_path = key_path.split('.', 2)
+    value = self[key.to_i]
+
+    return value unless nested_key_path
+    return value.fetch_deep(nested_key_path) if value
   end
 
   def reshape(shape)
